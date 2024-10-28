@@ -2,6 +2,8 @@
 #include <omp.h>
 #include <stdlib.h>
 
+const int TEN_MILLION = 10000000;
+
 int* get_input(int size) {
     int* ptr = (int*) malloc(sizeof(int) * size);
     for (size_t i = 0; i < size; i++) {
@@ -17,7 +19,7 @@ void display_array(int* ptr, int size) {
     // printf("\n");
 }
 
-int* convolution(int* ptr_A, int* ptr_F, int size_A, int size_F, int total_threads) { 
+int* convolution(int* ptr_A, int* ptr_F, int size_A, int size_F) { 
     int window_size = size_F;
     int result_size = size_A - size_F + 1;
     int* result = (int*) malloc(sizeof(int) * result_size);
@@ -27,7 +29,14 @@ int* convolution(int* ptr_A, int* ptr_F, int size_A, int size_F, int total_threa
         ptr_FF[i] = ptr_F[size_F - 1 - i];
     }
 
-    omp_set_num_threads(total_threads);
+    if (result_size * window_size < TEN_MILLION) {
+        omp_set_num_threads(1);
+    } else if (result_size * window_size < TEN_MILLION * TEN_MILLION) {
+        omp_set_num_threads(4);
+    } else {
+        omp_set_num_threads(8);
+    }
+
     #pragma omp parallel for schedule(dynamic)
     for (size_t i = 0; i < result_size; i++) {
         int summation = 0;
@@ -48,46 +57,48 @@ int main() {
     
     int* A = get_input(nA);
     int* F = get_input(nF);
-    int* R;
+    int* R = convolution(A, F, nA, nF);
   
     // sequential
-    double start_time, end_time;
-    start_time = omp_get_wtime();
-    R = convolution(A, F, nA, nF, 1);
-    // display_array(R, nA - nF + 1);
-    end_time = omp_get_wtime();
-    free(R);
+    // double start_time, end_time;
+    // start_time = omp_get_wtime();
+    // R = convolution(A, F, nA, nF, 1);
+    // // display_array(R, nA - nF + 1);
+    // end_time = omp_get_wtime();
+    // free(R);
  
-    double sequential_time = end_time - start_time;
-    printf("Sequential Time: %f seconds\n", sequential_time);
+    // double sequential_time = end_time - start_time;
+    // printf("Sequential Time: %f seconds\n", sequential_time);
 
-    // parallel 4 threads
-    start_time = omp_get_wtime();
-    R = convolution(A, F, nA, nF, 4);
-    // display_array(R, nA - nF + 1);
-    end_time = omp_get_wtime();
-    free(R);
+    // // parallel 4 threads
+    // start_time = omp_get_wtime();
+    // R = convolution(A, F, nA, nF, 4);
+    // // display_array(R, nA - nF + 1);
+    // end_time = omp_get_wtime();
+    // free(R);
 
-    double parallel_4_threads_time = end_time - start_time;
-    printf("Parallel 4 threads Time: %f seconds\n", parallel_4_threads_time);
+    // double parallel_4_threads_time = end_time - start_time;
+    // printf("Parallel 4 threads Time: %f seconds\n", parallel_4_threads_time);
 
-    double speedup_4_threads = sequential_time / parallel_4_threads_time;
-    printf("Speedup: %f\n", speedup_4_threads);
+    // double speedup_4_threads = sequential_time / parallel_4_threads_time;
+    // printf("Speedup: %f\n", speedup_4_threads);
 
-    // parallel 8 threads
-    start_time = omp_get_wtime();
-    R = convolution(A, F, nA, nF, 8);
-    // display_array(R, nA - nF + 1);
-    end_time = omp_get_wtime();
-    free(R);
+    // // parallel 8 threads
+    // start_time = omp_get_wtime();
+    // R = convolution(A, F, nA, nF, 8);
+    // // display_array(R, nA - nF + 1);
+    // end_time = omp_get_wtime();
+    // free(R);
 
-    double parallel_8_threads_time = end_time - start_time;
-    printf("Parallel 8 threads Time: %f seconds\n", parallel_8_threads_time);
+    // double parallel_8_threads_time = end_time - start_time;
+    // printf("Parallel 8 threads Time: %f seconds\n", parallel_8_threads_time);
 
-    double speedup_8_threads = sequential_time / parallel_8_threads_time;
-    printf("Speedup: %f\n", speedup_8_threads);
+    // double speedup_8_threads = sequential_time / parallel_8_threads_time;
+    // printf("Speedup: %f\n", speedup_8_threads);
 
+    display_array(R, nA - nF + 1);
     free(A);
     free(F);
+    free(R);
     return 0;
 }

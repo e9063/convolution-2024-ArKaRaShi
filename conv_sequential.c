@@ -13,7 +13,7 @@ void display_array(int* ptr, int size) {
     for (size_t i = 0; i < size; i++) {   
         printf("%d\n", ptr[i]);
     }
-    printf("\n");
+    // printf("\n");
 }
 
 int* convolution(int* ptr_A, int* ptr_F, int size_A, int size_F) { 
